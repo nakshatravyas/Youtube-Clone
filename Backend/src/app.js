@@ -17,7 +17,13 @@ app.use(express.urlencoded({extended:true,limit:"16kb"})) //config of url for ev
 app.use(express.static("public"))   //using public folder as static server. this will contain files that can be accessed by users eg:favicon
 app.use(cookieParser()) //cookie config
 
+//routes
+import userRouter from './routes/user.routes.js'
 
+//routes declaration
+
+//http://localhost:8000/api/vi/users/register
+app.use("/api/vi/users",userRouter)
 
 
 

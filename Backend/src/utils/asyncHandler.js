@@ -1,10 +1,10 @@
-const asyncHandler=(requestHandler)=>{
-    (req,res,next)=>{
-        Promise.resolve(requestHandler(req,res,next)).catch((error) => next(error));
-    }    
+const asyncHandler = (requestHandler) => {
+    return (req, res, next) => {
+        Promise.resolve(requestHandler(req, res, next)).catch((error) => next(error));
+    }
 }
-
-export {asyncHandler}
+//accepting a function and returning as a function
+export { asyncHandler }
 
 // can do above or below
 
