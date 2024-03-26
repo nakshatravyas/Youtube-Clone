@@ -222,4 +222,103 @@ const refreshTokenRenew = asyncHandler(async (req, res) => {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
-export { registerUser, loginUser, logoutUser,refreshTokenRenew }
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body
+
+    // if(!(new==confpass))
+    // {
+    //     throw
+    // }checking new and cnf pass are same or not but mostly done in frntend
+
+
+    //now here i want user but i am not taking any field regarding user but if user is changing the pass so it is logged in and that we have checked through the middleware and in that auth middleware we have inserted the user in the req so now we have user access
+    const user = await User.findById(req.user?._id)
+    //checking that the entered old password is correct or not
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password")
+    }
+
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, 'Password has been changed'))
+})
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(200, req.user, "Current user fetched successfully")
+
+})
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullname, email } = req.body
+    if (!fullname || !email) {
+        throw new ApiError(400, 'Please provide fullname & email')
+    }
+
+    //to update first find user
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullname: fullname,
+                email: email
+            }
+        },
+        { new: true }//to return new updated values
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, 'Profile Updated Successfully'));
+})
+//seperating the file update controller alag
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing")
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while updating avatar")
+    }
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set: {
+            avatar: avatar.url
+        }
+    }, { new: true }).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, 'Avatar Updated Successfully'));
+})
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const coverImageLocalPath = req.file?.path
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "Cover Image file is missing")
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    if (!coverImage.url) {
+        throw new ApiError(400, "Error while updating cover image")
+    }
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set: {
+            coverImage: coverImage.url
+        }
+    }, { new: true }).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, 'Cover Image Updated Successfully'));
+})
+export { registerUser, loginUser, logoutUser, refreshTokenRenew, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage }
